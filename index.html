@@ -127,7 +127,6 @@
       link.href = assetUrl(id);
       link.download = `${id}.png`;
       link.rel = 'noopener noreferrer';
-      link.target = '_blank';
       link.textContent = 'Download';
       link.setAttribute('aria-label', `Download asset ${id} as ${id}.png`);
       return link;
@@ -172,19 +171,20 @@
     document.querySelector('#clearButton').addEventListener('click', () => { input.value = ''; render(); input.focus(); });
     downloadAll.addEventListener('click', () => {
       if (!currentIds.length) return;
-      let started = 0;
       status.classList.remove('error');
-      status.textContent = `Starting ${currentIds.length} downloads… Your browser may ask to allow multiple downloads.`;
-      currentIds.forEach((id, index) => {
-        window.setTimeout(() => {
-          const link = makeLink(id);
-          document.body.append(link);
-          link.click();
-          link.remove();
-          started += 1;
-          if (started === currentIds.length) status.textContent = `Opened ${started} download request${started === 1 ? '' : 's'}. Check your browser’s downloads.`;
-        }, index * 500);
-      });
+      status.textContent = `Requesting ${currentIds.length} downloads. If your browser asks, allow multiple downloads for this file.`;
+      // Keep every click inside the user's button gesture. Delayed clicks and
+      // target=_blank are commonly treated as popups and blocked by browsers.
+      for (const id of currentIds) {
+        const link = makeLink(id);
+        link.hidden = true;
+        document.body.append(link);
+        link.click();
+        link.remove();
+      }
+      window.setTimeout(() => {
+        status.textContent = `Requested ${currentIds.length} downloads. Check your browser’s downloads and allow multiple downloads if prompted.`;
+      }, 250);
     });
   </script>
 </body>
